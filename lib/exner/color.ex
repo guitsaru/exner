@@ -6,4 +6,8 @@ defmodule Exner.Color do
   @spec parse(String.t()) :: t()
   def parse("w"), do: :white
   def parse("b"), do: :black
+
+  @spec other(t()) :: t()
+  def other(:white), do: :black
+  def other(:black), do: :white
 end

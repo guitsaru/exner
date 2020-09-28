@@ -3,7 +3,7 @@ defmodule Exner.Board do
 
   @behaviour Access
 
-  alias Exner.{Piece, Position}
+  alias Exner.{Move, Piece, Position}
 
   defstruct pieces: %{}
 
@@ -20,6 +20,18 @@ defmodule Exner.Board do
   @spec new(piece_map) :: t()
   def new(pieces) do
     %__MODULE__{pieces: pieces}
+  end
+
+  @spec move(t(), Move.t()) :: t()
+  def move(board, move) do
+    piece = board[move.from]
+
+    pieces =
+      board.pieces
+      |> Map.delete(move.from)
+      |> Map.put(move.to, piece)
+
+    %{board | pieces: pieces}
   end
 
   @impl Access
