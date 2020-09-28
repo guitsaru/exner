@@ -1,57 +1,71 @@
 defmodule Exner.Board do
   @moduledoc "A chess board"
 
-  alias Exner.Piece
+  @behaviour Access
 
-  defstruct [:pieces]
+  alias Exner.{Piece, Position}
 
-  @type piece_map :: %{optional(non_neg_integer()) => Piece.t()}
+  defstruct pieces: %{}
+
+  @type piece_map :: %{optional(Position.t()) => Piece.t()}
   @type t :: %__MODULE__{pieces: piece_map()}
 
   @spec new :: t()
   def new do
-    pieces = %{
-      01 => %Piece{color: :white, role: :rook},
-      02 => %Piece{color: :white, role: :knight},
-      03 => %Piece{color: :white, role: :bishop},
-      04 => %Piece{color: :white, role: :queen},
-      05 => %Piece{color: :white, role: :king},
-      06 => %Piece{color: :white, role: :bishop},
-      07 => %Piece{color: :white, role: :knight},
-      08 => %Piece{color: :white, role: :rook},
-      09 => %Piece{color: :white, role: :pawn},
-      10 => %Piece{color: :white, role: :pawn},
-      11 => %Piece{color: :white, role: :pawn},
-      12 => %Piece{color: :white, role: :pawn},
-      13 => %Piece{color: :white, role: :pawn},
-      14 => %Piece{color: :white, role: :pawn},
-      15 => %Piece{color: :white, role: :pawn},
-      16 => %Piece{color: :white, role: :pawn},
-      49 => %Piece{color: :black, role: :pawn},
-      50 => %Piece{color: :black, role: :pawn},
-      51 => %Piece{color: :black, role: :pawn},
-      52 => %Piece{color: :black, role: :pawn},
-      53 => %Piece{color: :black, role: :pawn},
-      54 => %Piece{color: :black, role: :pawn},
-      55 => %Piece{color: :black, role: :pawn},
-      56 => %Piece{color: :black, role: :pawn},
-      57 => %Piece{color: :black, role: :rook},
-      58 => %Piece{color: :black, role: :knight},
-      59 => %Piece{color: :black, role: :bishop},
-      60 => %Piece{color: :black, role: :queen},
-      61 => %Piece{color: :black, role: :king},
-      62 => %Piece{color: :black, role: :bishop},
-      63 => %Piece{color: :black, role: :knight},
-      64 => %Piece{color: :black, role: :rook}
-    }
+    {:ok, state} = Exner.FEN.starting_board()
 
-    new(pieces)
+    state.board
   end
 
   @spec new(piece_map) :: t()
   def new(pieces) do
     %__MODULE__{pieces: pieces}
   end
+
+  @impl Access
+  @spec fetch(t(), Position.t()) :: :error | {:ok, Piece.t()}
+  def fetch(board, position) do
+    if 0 < position and position <= 65 do
+      Map.fetch(board.pieces, position)
+    else
+      :error
+    end
+  end
+
+  @impl Access
+  @spec pop(t(), Position.t(), nil | Piece.t()) :: {Piece.t(), t()}
+  def pop(board, position, default \\ nil) do
+    {value, pieces} = Map.pop(board.pieces, position, default)
+
+    {value, %{board | pieces: pieces}}
+  end
+
+  @impl Access
+  @spec get_and_update(t(), Position.t(), (Piece.t() -> :pop | {Piece.t(), Piece.t()})) ::
+          {Piece.t(), t()}
+  def get_and_update(board, position, fun) do
+    {value, pieces} = Map.get_and_update(board.pieces, position, fun)
+
+    {value, %{board | pieces: pieces}}
+  end
+end
+
+defimpl Enumerable, for: Exner.Board do
+  @type acc :: {:cont, term()} | {:halt, term()} | {:suspend, term()}
+  @type result :: {:done, term()} | {:halted, term()} | {:suspended, term(), (acc() -> result())}
+
+  @spec count(%Exner.Board{}) :: {:ok, non_neg_integer}
+  def count(board = %Exner.Board{}), do: Enumerable.Map.count(board)
+
+  @spec member?(%Exner.Board{}, {Exner.Position.t(), Exner.Piece.t()}) :: {:ok, boolean}
+  def member?(board, {position, piece}), do: Enumerable.Map.member?(board, {position, piece})
+
+  @spec slice(%Exner.Board{}) ::
+          {:ok, non_neg_integer, (non_neg_integer(), pos_integer() -> [any()])}
+  def slice(board), do: Enumerable.Map.slice(board.pieces)
+
+  @spec reduce(%Exner.Board{}, acc(), (any, any -> any)) :: result
+  def reduce(board, acc, fun), do: Enumerable.Map.reduce(board.pieces, acc, fun)
 end
 
 defimpl String.Chars, for: Exner.Board do
@@ -60,7 +74,7 @@ defimpl String.Chars, for: Exner.Board do
     line = "\n+---+---+---+---+---+---+---+---+\n"
 
     ranks =
-      1..8
+      8..1
       |> Enum.map(fn rank -> print_rank(rank, board) <> line end)
       |> Enum.join("")
 

@@ -1,9 +1,8 @@
 defmodule Exner.Piece do
   @moduledoc "A chess piece"
 
-  @type color :: :white | :black
   @type role :: :pawn | :knight | :bishop | :rook | :queen | :king
-  @type t :: %__MODULE__{color: color(), role: role()}
+  @type t :: %__MODULE__{color: Exner.Color.t(), role: role()}
 
   defstruct [:color, :role]
 end
