@@ -1,5 +1,7 @@
 # Exner
 
+![CI](https://github.com/guitsaru/exner/workflows/CI/badge.svg)
+
 **TODO: Add description**
 
 ## Installation
