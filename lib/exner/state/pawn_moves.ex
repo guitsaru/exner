@@ -1,4 +1,6 @@
 defmodule Exner.State.PawnMoves do
+  @moduledoc "Generates all psuedo legal moves for a pawn"
+
   use Exner.State.Moves
 
   alias Exner.{Board, Move, Position}
@@ -31,25 +33,31 @@ defmodule Exner.State.PawnMoves do
     |> Enum.map(&%Move{from: position, to: &1})
   end
 
-  defp double_moves(position, board, :white) when position <= 16 do
-    position
-    |> Position.up()
-    |> Position.up()
-    |> List.wrap()
-    |> Enum.reject(&position_blocked?(&1, board))
-    |> Enum.map(&%Move{from: position, to: &1})
+  defp double_moves(position, board, :white) do
+    if Position.file(position) == 2 do
+      position
+      |> Position.up()
+      |> Position.up()
+      |> List.wrap()
+      |> Enum.reject(&position_blocked?(&1, board))
+      |> Enum.map(&%Move{from: position, to: &1})
+    else
+      []
+    end
   end
 
-  defp double_moves(position, board, :black) when position >= 49 do
-    position
-    |> Position.down()
-    |> Position.down()
-    |> List.wrap()
-    |> Enum.reject(&position_blocked?(&1, board))
-    |> Enum.map(&%Move{from: position, to: &1})
+  defp double_moves(position, board, :black) do
+    if Position.file(position) == 7 do
+      position
+      |> Position.down()
+      |> Position.down()
+      |> List.wrap()
+      |> Enum.reject(&position_blocked?(&1, board))
+      |> Enum.map(&%Move{from: position, to: &1})
+    else
+      []
+    end
   end
-
-  defp double_moves(_, _, _), do: []
 
   defp attacks(position, board, :white) do
     attacks = [Position.up_left(position), Position.up_right(position)]

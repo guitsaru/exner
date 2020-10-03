@@ -1,0 +1,114 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "phx.server",
+      "type": "shell",
+      "command": "iex -S mix phx.server"
+    },
+    {
+      "label": "Run All Tests",
+      "command": "mix test",
+      "type": "shell",
+      "group": "test",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "problemMatcher": [
+        "$mixCompileError",
+        "$mixCompileWarning",
+        "$mixTestFailure"
+      ]
+    },
+    {
+      "label": "Run Current Test",
+      "command": "mix test ${relativeFile}:${lineNumber}",
+      "type": "shell",
+      "group": "test",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "problemMatcher": [
+        "$mixCompileError",
+        "$mixCompileWarning",
+        "$mixTestFailure"
+      ]
+    },
+    {
+      "label": "Test Current File",
+      "command": "mix test ${relativeFile}",
+      "group": "test",
+      "type": "shell",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "problemMatcher": [
+        "$mixCompileError",
+        "$mixCompileWarning",
+        "$mixTestFailure"
+      ]
+    },
+    {
+      "label": "Add Saved Test",
+      "group": "test",
+      "type": "shell",
+      "command": "echo -n ${relativeFile}:${lineNumber} > ${workspaceRoot}/.vscode/STORED_TEST",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "Add Saved File Test",
+      "group": "test",
+      "type": "shell",
+      "command": "echo -n ${relativeFile} > ${workspaceRoot}/.vscode/STORED_TEST",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "Delete Saved Test",
+      "group": "test",
+      "type": "shell",
+      "command": "rm ${workspaceRoot}/.vscode/STORED_TEST",
+      "presentation": {
+        "echo": true,
+        "reveal": "never",
+        "focus": false,
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "Run Saved Test",
+      "command": "mix test $(cat ${workspaceRoot}/.vscode/STORED_TEST)",
+      "type": "shell",
+      "group": "test",
+      "problemMatcher": [
+        "$mixCompileError",
+        "$mixCompileWarning",
+        "$mixTestFailure"
+      ],
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      }
+    }
+  ]
+}

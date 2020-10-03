@@ -1,4 +1,6 @@
 defmodule Exner.State.BishopMoves do
+  @moduledoc "Generates all psuedo legal moves for a bishop"
+
   use Exner.State.Moves
 
   import Exner.State.Moves, only: [position_blocked?: 3]
@@ -22,7 +24,7 @@ defmodule Exner.State.BishopMoves do
 
   defp follow_diagonal(position, board, direction_fun) do
     case direction_fun.(position) do
-      :error ->
+      nil ->
         []
 
       move ->

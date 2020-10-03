@@ -9,7 +9,7 @@ defmodule Exner.StateTest do
     test "initial white pawn moves" do
       {:ok, state} = Exner.FEN.starting_board()
       moves = State.possible_moves(state)
-      pawn_moves = moves[9]
+      pawn_moves = moves[Exner.Position.parse("b2")]
 
       assert Enum.count(pawn_moves) == 2
     end
@@ -18,7 +18,7 @@ defmodule Exner.StateTest do
       fen = "8/8/8/8/8/8/r1PK4/8 w KQkq - 0 1"
       {:ok, state} = Exner.FEN.parse(fen)
       moves = State.possible_moves(state)
-      pawn_moves = moves[11]
+      pawn_moves = moves[Exner.Position.parse("c2")]
 
       assert Enum.empty?(pawn_moves)
     end

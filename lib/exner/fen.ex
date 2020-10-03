@@ -33,6 +33,7 @@ defmodule Exner.FEN do
     |> String.split("")
     |> Enum.flat_map(&expand_spaces/1)
     |> Enum.with_index()
+    |> Enum.map(fn {piece, index} -> {piece, position_from_index(index)} end)
     |> Enum.map(&parse_piece/1)
     |> build_board()
   end
@@ -77,5 +78,12 @@ defmodule Exner.FEN do
       {x, ""} -> 1..x |> Enum.to_list() |> Enum.map(fn _ -> " " end)
       _ -> [n]
     end
+  end
+
+  defp position_from_index(index) do
+    rank = Kernel.to_string([Integer.mod(index, 8) + 96])
+    file = Kernel.to_string(Integer.floor_div(index, 8) + 1)
+    notation = rank <> file
+    Exner.Position.parse(notation)
   end
 end

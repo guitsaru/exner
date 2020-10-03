@@ -1,4 +1,6 @@
 defmodule Exner.State.QueenMoves do
+  @moduledoc "Generates all psuedo legal moves for a queen"
+
   use Exner.State.Moves
 
   import Exner.State.Moves, only: [position_blocked?: 3]
