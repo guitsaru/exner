@@ -4,7 +4,6 @@ defmodule Exner.Move do
   alias Exner.Position
 
   @enforce_keys [:from, :to]
-  defstruct [:from, :to]
-
-  @type t :: %__MODULE__{from: Position.t(), to: Position.t()}
+  defstruct from: nil, to: nil, is_castle?: false
+  @type t :: %__MODULE__{from: Position.t(), to: Position.t(), is_castle?: boolean}
 end

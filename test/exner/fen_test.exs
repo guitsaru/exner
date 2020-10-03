@@ -32,5 +32,45 @@ defmodule Exner.FENTest do
       assert {:ok, state} = FEN.parse(fen)
       assert state.en_passant == Position.parse("e3")
     end
+
+    test "with all castling available" do
+      fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+
+      assert {:ok, state} = FEN.parse(fen)
+      assert state.white_can_castle_kingside
+      assert state.white_can_castle_queenside
+      assert state.black_can_castle_kingside
+      assert state.black_can_castle_queenside
+    end
+
+    test "with no white castling" do
+      fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w kq - 0 1"
+
+      assert {:ok, state} = FEN.parse(fen)
+      refute state.white_can_castle_kingside
+      refute state.white_can_castle_queenside
+      assert state.black_can_castle_kingside
+      assert state.black_can_castle_queenside
+    end
+
+    test "with no black castling" do
+      fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQ - 0 1"
+
+      assert {:ok, state} = FEN.parse(fen)
+      assert state.white_can_castle_kingside
+      assert state.white_can_castle_queenside
+      refute state.black_can_castle_kingside
+      refute state.black_can_castle_queenside
+    end
+
+    test "with no castling" do
+      fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 1"
+
+      assert {:ok, state} = FEN.parse(fen)
+      refute state.white_can_castle_kingside
+      refute state.white_can_castle_queenside
+      refute state.black_can_castle_kingside
+      refute state.black_can_castle_queenside
+    end
   end
 end

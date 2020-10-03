@@ -5,22 +5,46 @@ defmodule Exner.State do
 
   @type moves_map :: %{optional(Position.t()) => [Move.t()]}
   @type maybe_position :: Position.t() | nil
-  @type t :: %__MODULE__{board: Board.t(), active: Color.t(), en_passant: maybe_position}
+  @type t :: %__MODULE__{
+          board: Board.t(),
+          active: Color.t(),
+          en_passant: maybe_position,
+          white_can_castle_kingside: boolean,
+          white_can_castle_queenside: boolean,
+          black_can_castle_kingside: boolean,
+          black_can_castle_queenside: boolean
+        }
 
   @enforce_keys [:board, :active]
-  defstruct [:board, :active, :en_passant]
+  defstruct [
+    :board,
+    :active,
+    :en_passant,
+    :white_can_castle_kingside,
+    :white_can_castle_queenside,
+    :black_can_castle_kingside,
+    :black_can_castle_queenside
+  ]
 
   @spec new(Board.t(), Color.t()) :: t()
   def new(board, active) do
-    %__MODULE__{board: board, active: active}
+    %__MODULE__{
+      board: board,
+      active: active,
+      white_can_castle_queenside: true,
+      white_can_castle_kingside: true,
+      black_can_castle_queenside: true,
+      black_can_castle_kingside: true
+    }
   end
 
   @spec move(t(), Move.t()) :: {:ok, t()} | {:error, String.t()}
   def move(state, move) do
     with {:ok, board} <- Board.move(state.board, move),
          color <- Color.other(state.active),
-         en_passant <- en_passant(state.board, move) do
-      {:ok, %__MODULE__{board: board, active: color, en_passant: en_passant}}
+         en_passant <- en_passant(state.board, move),
+         {:ok, castle_checked_state} <- check_castle_state(state, move) do
+      {:ok, %{castle_checked_state | active: color, board: board, en_passant: en_passant}}
     else
       error -> error
     end
@@ -41,6 +65,14 @@ defmodule Exner.State do
       {position, legal_moves}
     end)
     |> Enum.into(%{})
+  end
+
+  @spec in_check?(t()) :: boolean
+  def in_check?(state) do
+    case in_check?({:ok, state}, state.active) do
+      {:error, _} -> false
+      status -> status
+    end
   end
 
   defp psuedo_legal_moves(state) do
@@ -115,5 +147,47 @@ defmodule Exner.State do
     piece = Board.at(board, move.from)
 
     en_passant(piece, move)
+  end
+
+  defp check_castle_state(%__MODULE__{active: :white} = state, move) do
+    piece = Board.at(state.board, move.from)
+    king_not_moved = piece.role != :king
+    king_rook_not_moved = piece.role != :rook || move.from != Position.parse("h1")
+    queen_rook_not_moved = piece.role != :rook || move.from != Position.parse("a1")
+
+    white_can_castle_kingside =
+      king_not_moved && king_rook_not_moved && state.white_can_castle_kingside
+
+    white_can_castle_queenside =
+      king_not_moved && queen_rook_not_moved && state.white_can_castle_queenside
+
+    new_state = %{
+      state
+      | white_can_castle_kingside: white_can_castle_kingside,
+        white_can_castle_queenside: white_can_castle_queenside
+    }
+
+    {:ok, new_state}
+  end
+
+  defp check_castle_state(%__MODULE__{active: :black} = state, move) do
+    piece = Board.at(state.board, move.from)
+    king_not_moved = piece.role != :king
+    king_rook_not_moved = piece.role != :rook || move.from != Position.parse("h8")
+    queen_rook_not_moved = piece.role != :rook || move.from != Position.parse("a8")
+
+    black_can_castle_kingside =
+      king_not_moved && king_rook_not_moved && state.black_can_castle_kingside
+
+    black_can_castle_queenside =
+      king_not_moved && queen_rook_not_moved && state.black_can_castle_queenside
+
+    new_state = %{
+      state
+      | black_can_castle_kingside: black_can_castle_kingside,
+        black_can_castle_queenside: black_can_castle_queenside
+    }
+
+    {:ok, new_state}
   end
 end

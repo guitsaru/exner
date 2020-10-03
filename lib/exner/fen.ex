@@ -10,13 +10,17 @@ defmodule Exner.FEN do
 
   @spec parse(String.t()) :: {:ok, State.t()} | {:error, String.t()}
   def parse(fen) do
-    with {:ok, [board_fen, active, _castles, en_passant | _]} <- split_fen(fen),
+    with {:ok, [board_fen, active, castles, en_passant | _]} <- split_fen(fen),
          {:ok, board} <- parse_board(board_fen) do
       {:ok,
        %State{
          board: board,
          active: Exner.Color.parse(active),
-         en_passant: Exner.Position.parse(en_passant)
+         en_passant: Exner.Position.parse(en_passant),
+         white_can_castle_kingside: can_white_castle_kingside(castles),
+         white_can_castle_queenside: can_white_castle_queenside(castles),
+         black_can_castle_kingside: can_black_castle_kingside(castles),
+         black_can_castle_queenside: can_black_castle_queenside(castles)
        }}
     else
       response -> response
@@ -91,4 +95,9 @@ defmodule Exner.FEN do
     notation = rank <> file
     Exner.Position.parse(notation)
   end
+
+  defp can_white_castle_kingside(castle_string), do: String.contains?(castle_string, "K")
+  defp can_white_castle_queenside(castle_string), do: String.contains?(castle_string, "Q")
+  defp can_black_castle_kingside(castle_string), do: String.contains?(castle_string, "k")
+  defp can_black_castle_queenside(castle_string), do: String.contains?(castle_string, "q")
 end

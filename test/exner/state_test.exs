@@ -61,4 +61,123 @@ defmodule Exner.StateTest do
       assert state.en_passant == Exner.Position.parse("a3")
     end
   end
+
+  describe "in_check?/1" do
+    test "gives correct answer when not in check" do
+      {:ok, state} = Exner.FEN.starting_board()
+
+      refute State.in_check?(state)
+    end
+
+    test "gives correct answer when in check" do
+      fen = "1nbqkbnr/pppppppp/4r3/8/8/8/PPPP1PPP/RNBQKBNR w KQkq - 0 1"
+      {:ok, state} = Exner.FEN.parse(fen)
+
+      assert State.in_check?(state)
+    end
+  end
+
+  describe "castle ability" do
+    test "gives correct answer when no pieces moved" do
+      {:ok, state} = Exner.FEN.starting_board()
+
+      assert state.white_can_castle_kingside
+      assert state.white_can_castle_queenside
+      assert state.black_can_castle_kingside
+      assert state.black_can_castle_queenside
+    end
+
+    test "gives correct answer when white king moved" do
+      from = Exner.Position.parse("e1")
+      to = Exner.Position.parse("e3")
+      {:ok, state} = Exner.FEN.starting_board()
+      {:ok, state} = State.move(state, %Exner.Move{from: from, to: to})
+
+      refute state.white_can_castle_kingside
+      refute state.white_can_castle_queenside
+      assert state.black_can_castle_kingside
+      assert state.black_can_castle_queenside
+    end
+
+    test "gives correct answer when white king's rook moved" do
+      from = Exner.Position.parse("h1")
+      to = Exner.Position.parse("h3")
+      {:ok, state} = Exner.FEN.starting_board()
+      {:ok, state} = State.move(state, %Exner.Move{from: from, to: to})
+
+      refute state.white_can_castle_kingside
+      assert state.white_can_castle_queenside
+      assert state.black_can_castle_kingside
+      assert state.black_can_castle_queenside
+    end
+
+    test "gives correct answer when white queen's rook moved" do
+      from = Exner.Position.parse("a1")
+      to = Exner.Position.parse("a3")
+      {:ok, state} = Exner.FEN.starting_board()
+      {:ok, state} = State.move(state, %Exner.Move{from: from, to: to})
+
+      assert state.white_can_castle_kingside
+      refute state.white_can_castle_queenside
+      assert state.black_can_castle_kingside
+      assert state.black_can_castle_queenside
+    end
+
+    test "gives correct answer when black king moved" do
+      from = Exner.Position.parse("e8")
+      to = Exner.Position.parse("e5")
+      {:ok, state} = Exner.FEN.starting_board()
+
+      {:ok, state} =
+        State.move(state, %Exner.Move{
+          from: Exner.Position.parse("a2"),
+          to: Exner.Position.parse("a3")
+        })
+
+      {:ok, state} = State.move(state, %Exner.Move{from: from, to: to})
+
+      assert state.white_can_castle_kingside
+      assert state.white_can_castle_queenside
+      refute state.black_can_castle_kingside
+      refute state.black_can_castle_queenside
+    end
+
+    test "gives correct answer when black king's rook moved" do
+      from = Exner.Position.parse("h8")
+      to = Exner.Position.parse("h5")
+      {:ok, state} = Exner.FEN.starting_board()
+
+      {:ok, state} =
+        State.move(state, %Exner.Move{
+          from: Exner.Position.parse("a2"),
+          to: Exner.Position.parse("a3")
+        })
+
+      {:ok, state} = State.move(state, %Exner.Move{from: from, to: to})
+
+      assert state.white_can_castle_kingside
+      assert state.white_can_castle_queenside
+      refute state.black_can_castle_kingside
+      assert state.black_can_castle_queenside
+    end
+
+    test "gives correct answer when black queen's rook moved" do
+      from = Exner.Position.parse("a8")
+      to = Exner.Position.parse("a5")
+      {:ok, state} = Exner.FEN.starting_board()
+
+      {:ok, state} =
+        State.move(state, %Exner.Move{
+          from: Exner.Position.parse("a2"),
+          to: Exner.Position.parse("a3")
+        })
+
+      {:ok, state} = State.move(state, %Exner.Move{from: from, to: to})
+
+      assert state.white_can_castle_kingside
+      assert state.white_can_castle_queenside
+      assert state.black_can_castle_kingside
+      refute state.black_can_castle_queenside
+    end
+  end
 end
