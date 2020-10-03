@@ -60,6 +60,20 @@ defmodule Exner.StateTest do
 
       assert state.en_passant == Exner.Position.parse("a3")
     end
+
+    test "can en passant after black double pawn move" do
+      {:ok, state} = Exner.FEN.starting_board()
+      from = Exner.Position.parse("a2")
+      to = Exner.Position.parse("a4")
+      move = %Exner.Move{from: from, to: to}
+      {:ok, state} = State.move(state, move)
+      from = Exner.Position.parse("a7")
+      to = Exner.Position.parse("a5")
+      move = %Exner.Move{from: from, to: to}
+      {:ok, state} = State.move(state, move)
+
+      assert state.en_passant == Exner.Position.parse("a6")
+    end
   end
 
   describe "in_check?/1" do

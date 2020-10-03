@@ -58,4 +58,12 @@ defmodule Exner.BoardTest do
       assert Board.at(board, to) == %Exner.Piece{color: :white, role: :pawn}
     end
   end
+
+  describe "to_string/1" do
+    test "prints the board" do
+      board = Board.new()
+
+      assert String.contains?(to_string(board), "+-")
+    end
+  end
 end
