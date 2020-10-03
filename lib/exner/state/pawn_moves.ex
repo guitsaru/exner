@@ -1,11 +1,11 @@
 defmodule Exner.State.PawnMoves do
   use Exner.State.Moves
 
-  alias Exner.{Move, Position}
+  alias Exner.{Board, Move, Position}
 
   @spec moves(Position.t(), Exner.Board.t()) :: [Move.t()]
   def moves(position, board) do
-    pawn = board[position]
+    pawn = Board.at(board, position)
 
     [
       default_moves(position, board, pawn.color),
@@ -66,13 +66,13 @@ defmodule Exner.State.PawnMoves do
   defp position_blocked?(:error, _board), do: true
 
   defp position_blocked?(position, board) do
-    board[position] != nil
+    Board.at(board, position) != nil
   end
 
   defp can_attack?(:error, _, _), do: false
 
   defp can_attack?(position, board, color) do
-    case board[position] do
+    case Board.at(board, position) do
       nil -> false
       %Exner.Piece{color: other} -> color != other
     end

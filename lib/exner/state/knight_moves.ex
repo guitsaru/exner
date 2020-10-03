@@ -3,11 +3,11 @@ defmodule Exner.State.KnightMoves do
 
   import Exner.State.Moves, only: [position_blocked?: 3]
 
-  alias Exner.{Move, Position}
+  alias Exner.{Board, Move, Position}
 
   @spec moves(Exner.Position.t(), Exner.Board.t()) :: [Move.t()]
   def moves(position, board) do
-    knight = board[position]
+    knight = Board.at(board, position)
 
     moves = [
       position |> Position.up() |> Position.up_left(),

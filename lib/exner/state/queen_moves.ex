@@ -3,12 +3,12 @@ defmodule Exner.State.QueenMoves do
 
   import Exner.State.Moves, only: [position_blocked?: 3]
 
-  alias Exner.Move
+  alias Exner.{Board, Move}
   alias Exner.State.{BishopMoves, RookMoves}
 
   @spec moves(Exner.Position.t(), Exner.Board.t()) :: [Move.t()]
   def moves(position, board) do
-    queen = board[position]
+    queen = Board.at(board, position)
 
     [
       BishopMoves.moves(position, board),

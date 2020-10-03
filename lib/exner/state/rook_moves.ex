@@ -3,11 +3,11 @@ defmodule Exner.State.RookMoves do
 
   import Exner.State.Moves, only: [position_blocked?: 3]
 
-  alias Exner.{Move, Position}
+  alias Exner.{Board, Move, Position}
 
   @spec moves(Exner.Position.t(), Exner.Board.t()) :: [Move.t()]
   def moves(position, board) do
-    rook = board[position]
+    rook = Board.at(board, position)
 
     [
       follow_line(position, board, &Position.up/1),
@@ -26,7 +26,7 @@ defmodule Exner.State.RookMoves do
         []
 
       move ->
-        if board[move] == nil do
+        if Board.at(board, move) == nil do
           [move | follow_line(move, board, direction_fun)]
         else
           [move]

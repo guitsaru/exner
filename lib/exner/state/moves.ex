@@ -14,7 +14,7 @@ defmodule Exner.State.Moves do
   def position_blocked?(:error, _board, _color), do: true
 
   def position_blocked?(position, board, color) do
-    case board[position] do
+    case Board.at(board, position) do
       nil -> false
       piece -> piece.color == color
     end

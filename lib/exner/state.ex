@@ -12,12 +12,14 @@ defmodule Exner.State do
     %__MODULE__{board: board, active: active}
   end
 
-  @spec move(t(), Move.t()) :: t()
+  @spec move(t(), Move.t()) :: {:ok, t()} | {:error, String.t()}
   def move(state, move) do
-    board = Board.move(state.board, move)
-    color = Color.other(state.active)
-
-    %__MODULE__{board: board, active: color}
+    with {:ok, board} <- Board.move(state.board, move),
+         color <- Color.other(state.active) do
+      {:ok, %__MODULE__{board: board, active: color}}
+    else
+      error -> error
+    end
   end
 
   @spec possible_moves(t()) :: moves_map()
@@ -40,15 +42,20 @@ defmodule Exner.State do
   defp psuedo_legal_moves(board, active) do
     movable_pieces =
       board
+      |> Board.pieces()
       |> Enum.filter(fn {_, piece} -> piece.color == active end)
       |> Enum.map(fn {position, piece} -> {position, moves(board, position, piece)} end)
 
     Enum.into(movable_pieces, %{})
   end
 
-  defp in_check?(state, color) do
+  defp in_check?({:error, message}, _), do: {:error, message}
+
+  defp in_check?({:ok, state}, color) do
     {king_pos, _} =
-      Enum.find(state.board, fn {_, piece} -> piece.color == color && piece.role == :king end)
+      state.board
+      |> Board.pieces()
+      |> Enum.find(fn {_, piece} -> piece.color == color && piece.role == :king end)
 
     state.board
     |> psuedo_legal_moves(Color.other(color))

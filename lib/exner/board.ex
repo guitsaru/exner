@@ -1,14 +1,13 @@
 defmodule Exner.Board do
   @moduledoc "A chess board"
 
-  @behaviour Access
-
+  alias Exner.{Move, Piece, Position}
   alias Exner.{Move, Piece, Position}
 
   defstruct pieces: %{}
 
   @type piece_map :: %{optional(Position.t()) => Piece.t()}
-  @type t :: %__MODULE__{pieces: piece_map()}
+  @opaque t :: %__MODULE__{pieces: piece_map()}
 
   @spec new :: t()
   def new do
@@ -22,62 +21,31 @@ defmodule Exner.Board do
     %__MODULE__{pieces: pieces}
   end
 
-  @spec move(t(), Move.t()) :: t()
-  def move(board, move) do
-    piece = board[move.from]
-
-    pieces =
-      board.pieces
-      |> Map.delete(move.from)
-      |> Map.put(move.to, piece)
-
-    %{board | pieces: pieces}
+  @spec at(t(), Position.t()) :: Piece.t() | nil
+  def at(board, position) do
+    board.pieces[position]
   end
 
-  @impl Access
-  @spec fetch(t(), Position.t()) :: :error | {:ok, Piece.t()}
-  def fetch(board, position) do
-    if 0 < position and position <= 65 do
-      Map.fetch(board.pieces, position)
-    else
-      :error
+  @spec pieces(t()) :: [{Position.t(), Piece.t()}]
+  def pieces(board), do: Enum.to_list(board.pieces)
+
+  @spec move(t(), Move.t()) :: {:ok, t()} | {:error, String.t()}
+  def move(board, move) do
+    piece = at(board, move.from)
+
+    case piece do
+      nil ->
+        {:error, "there is no piece at #{move}"}
+
+      _ ->
+        pieces =
+          board.pieces
+          |> Map.delete(move.from)
+          |> Map.put(move.to, piece)
+
+        {:ok, %{board | pieces: pieces}}
     end
   end
-
-  @impl Access
-  @spec pop(t(), Position.t(), nil | Piece.t()) :: {Piece.t(), t()}
-  def pop(board, position, default \\ nil) do
-    {value, pieces} = Map.pop(board.pieces, position, default)
-
-    {value, %{board | pieces: pieces}}
-  end
-
-  @impl Access
-  @spec get_and_update(t(), Position.t(), (Piece.t() -> :pop | {Piece.t(), Piece.t()})) ::
-          {Piece.t(), t()}
-  def get_and_update(board, position, fun) do
-    {value, pieces} = Map.get_and_update(board.pieces, position, fun)
-
-    {value, %{board | pieces: pieces}}
-  end
-end
-
-defimpl Enumerable, for: Exner.Board do
-  @type acc :: {:cont, term()} | {:halt, term()} | {:suspend, term()}
-  @type result :: {:done, term()} | {:halted, term()} | {:suspended, term(), (acc() -> result())}
-
-  @spec count(%Exner.Board{}) :: {:ok, non_neg_integer}
-  def count(board = %Exner.Board{}), do: Enumerable.Map.count(board)
-
-  @spec member?(%Exner.Board{}, {Exner.Position.t(), Exner.Piece.t()}) :: {:ok, boolean}
-  def member?(board, {position, piece}), do: Enumerable.Map.member?(board, {position, piece})
-
-  @spec slice(%Exner.Board{}) ::
-          {:ok, non_neg_integer, (non_neg_integer(), pos_integer() -> [any()])}
-  def slice(board), do: Enumerable.Map.slice(board.pieces)
-
-  @spec reduce(%Exner.Board{}, acc(), (any, any -> any)) :: result
-  def reduce(board, acc, fun), do: Enumerable.Map.reduce(board.pieces, acc, fun)
 end
 
 defimpl String.Chars, for: Exner.Board do
