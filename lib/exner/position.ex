@@ -6,6 +6,7 @@ defmodule Exner.Position do
   @typep file :: 1..8
   @opaque t :: %__MODULE__{square: square()}
 
+  @enforce_keys :square
   defstruct [:square]
 
   @spec parse(String.t()) :: t() | nil

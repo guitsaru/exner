@@ -10,9 +10,14 @@ defmodule Exner.FEN do
 
   @spec parse(String.t()) :: {:ok, State.t()} | {:error, String.t()}
   def parse(fen) do
-    with {:ok, [board_fen, active | _]} <- split_fen(fen),
+    with {:ok, [board_fen, active, _castles, en_passant | _]} <- split_fen(fen),
          {:ok, board} <- parse_board(board_fen) do
-      {:ok, %State{board: board, active: Exner.Color.parse(active)}}
+      {:ok,
+       %State{
+         board: board,
+         active: Exner.Color.parse(active),
+         en_passant: Exner.Position.parse(en_passant)
+       }}
     else
       response -> response
     end

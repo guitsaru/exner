@@ -3,33 +3,31 @@ defmodule Exner.State.RookMoves do
 
   use Exner.State.Moves
 
-  import Exner.State.Moves, only: [position_blocked?: 3]
+  import Exner.State.Moves, only: [position_blocked?: 2]
 
   alias Exner.{Board, Move, Position}
 
-  @spec moves(Exner.Position.t(), Exner.Board.t()) :: [Move.t()]
-  def moves(position, board) do
-    rook = Board.at(board, position)
-
+  @spec moves(Exner.Position.t(), Exner.State.t()) :: [Move.t()]
+  def moves(position, state) do
     [
-      follow_line(position, board, &Position.up/1),
-      follow_line(position, board, &Position.down/1),
-      follow_line(position, board, &Position.left/1),
-      follow_line(position, board, &Position.right/1)
+      follow_line(position, state, &Position.up/1),
+      follow_line(position, state, &Position.down/1),
+      follow_line(position, state, &Position.left/1),
+      follow_line(position, state, &Position.right/1)
     ]
     |> Enum.flat_map(& &1)
-    |> Enum.reject(&position_blocked?(&1, board, rook.color))
+    |> Enum.reject(&position_blocked?(&1, state))
     |> Enum.map(&%Move{from: position, to: &1})
   end
 
-  defp follow_line(position, board, direction_fun) do
+  defp follow_line(position, state, direction_fun) do
     case direction_fun.(position) do
       nil ->
         []
 
       move ->
-        if Board.at(board, move) == nil do
-          [move | follow_line(move, board, direction_fun)]
+        if Board.at(state.board, move) == nil do
+          [move | follow_line(move, state, direction_fun)]
         else
           [move]
         end

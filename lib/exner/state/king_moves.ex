@@ -3,14 +3,12 @@ defmodule Exner.State.KingMoves do
 
   use Exner.State.Moves
 
-  import Exner.State.Moves, only: [position_blocked?: 3]
+  import Exner.State.Moves, only: [position_blocked?: 2]
 
-  alias Exner.{Board, Move, Position}
+  alias Exner.{Move, Position}
 
-  @spec moves(Exner.Position.t(), Exner.Board.t()) :: [Move.t()]
+  @spec moves(Exner.Position.t(), Exner.State.t()) :: [Move.t()]
   def moves(position, board) do
-    king = Board.at(board, position)
-
     moves = [
       Position.up(position),
       Position.down(position),
@@ -19,7 +17,7 @@ defmodule Exner.State.KingMoves do
     ]
 
     moves
-    |> Enum.reject(&position_blocked?(&1, board, king.color()))
+    |> Enum.reject(&position_blocked?(&1, board))
     |> Enum.map(&%Move{from: position, to: &1})
   end
 end

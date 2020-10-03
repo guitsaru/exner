@@ -3,86 +3,82 @@ defmodule Exner.State.PawnMoves do
 
   use Exner.State.Moves
 
-  alias Exner.{Board, Move, Position}
+  import Exner.State.Moves, only: [position_blocked?: 2]
 
-  @spec moves(Position.t(), Exner.Board.t()) :: [Move.t()]
-  def moves(position, board) do
-    pawn = Board.at(board, position)
+  alias Exner.{Board, Move, Position, State}
 
+  @spec moves(Position.t(), Exner.State.t()) :: [Move.t()]
+  def moves(position, state) do
     [
-      default_moves(position, board, pawn.color),
-      double_moves(position, board, pawn.color),
-      attacks(position, board, pawn.color)
+      default_moves(position, state),
+      double_moves(position, state),
+      attacks(position, state)
     ]
     |> Enum.flat_map(& &1)
   end
 
-  defp default_moves(position, board, :white) do
+  defp default_moves(position, %State{active: :white} = state) do
     position
     |> Position.up()
     |> List.wrap()
-    |> Enum.reject(&position_blocked?(&1, board))
+    |> Enum.reject(&position_blocked?(&1, state))
     |> Enum.map(&%Move{from: position, to: &1})
   end
 
-  defp default_moves(position, board, :black) do
+  defp default_moves(position, %State{active: :black} = state) do
     position
     |> Position.down()
     |> List.wrap()
-    |> Enum.reject(&position_blocked?(&1, board))
+    |> Enum.reject(&position_blocked?(&1, state))
     |> Enum.map(&%Move{from: position, to: &1})
   end
 
-  defp double_moves(position, board, :white) do
+  defp double_moves(position, %State{active: :white} = state) do
     if Position.file(position) == 2 do
       position
       |> Position.up()
       |> Position.up()
       |> List.wrap()
-      |> Enum.reject(&position_blocked?(&1, board))
+      |> Enum.reject(&position_blocked?(&1, state))
       |> Enum.map(&%Move{from: position, to: &1})
     else
       []
     end
   end
 
-  defp double_moves(position, board, :black) do
+  defp double_moves(position, %State{active: :black} = state) do
     if Position.file(position) == 7 do
       position
       |> Position.down()
       |> Position.down()
       |> List.wrap()
-      |> Enum.reject(&position_blocked?(&1, board))
+      |> Enum.reject(&position_blocked?(&1, state))
       |> Enum.map(&%Move{from: position, to: &1})
     else
       []
     end
   end
 
-  defp attacks(position, board, :white) do
-    attacks = [Position.up_left(position), Position.up_right(position)]
-
-    Enum.filter(attacks, &can_attack?(&1, board, :white))
+  defp attacks(position, %State{active: :white} = state) do
+    [Position.up_left(position), Position.up_right(position)]
+    |> Enum.filter(&can_attack?(&1, state))
+    |> Enum.map(&%Move{from: position, to: &1})
   end
 
-  defp attacks(position, board, :black) do
-    attacks = [Position.down_left(position), Position.down_right(position)]
-
-    Enum.filter(attacks, &can_attack?(&1, board, :black))
+  defp attacks(position, %State{active: :black} = state) do
+    [Position.down_left(position), Position.down_right(position)]
+    |> Enum.filter(&can_attack?(&1, state))
+    |> Enum.map(&%Move{from: position, to: &1})
   end
 
-  defp position_blocked?(:error, _board), do: true
+  defp can_attack?(nil, _), do: false
 
-  defp position_blocked?(position, board) do
-    Board.at(board, position) != nil
-  end
+  defp can_attack?(position, %State{en_passant: position}), do: true
 
-  defp can_attack?(:error, _, _), do: false
-
-  defp can_attack?(position, board, color) do
-    case Board.at(board, position) do
+  defp can_attack?(position, state) do
+    case Board.at(state.board, position) do
       nil -> false
-      %Exner.Piece{color: other} -> color != other
+      %Exner.Piece{color: other} -> state.active != other
     end
   end
 end

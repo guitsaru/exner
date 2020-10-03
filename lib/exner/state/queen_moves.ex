@@ -3,21 +3,19 @@ defmodule Exner.State.QueenMoves do
 
   use Exner.State.Moves
 
-  import Exner.State.Moves, only: [position_blocked?: 3]
+  import Exner.State.Moves, only: [position_blocked?: 2]
 
-  alias Exner.{Board, Move}
+  alias Exner.Move
   alias Exner.State.{BishopMoves, RookMoves}
 
-  @spec moves(Exner.Position.t(), Exner.Board.t()) :: [Move.t()]
-  def moves(position, board) do
-    queen = Board.at(board, position)
-
+  @spec moves(Exner.Position.t(), Exner.State.t()) :: [Move.t()]
+  def moves(position, state) do
     [
-      BishopMoves.moves(position, board),
-      RookMoves.moves(position, board)
+      BishopMoves.moves(position, state),
+      RookMoves.moves(position, state)
     ]
     |> Enum.flat_map(& &1)
-    |> Enum.reject(&position_blocked?(&1, board, queen.color))
+    |> Enum.reject(&position_blocked?(&1, state))
     |> Enum.map(&%Move{from: position, to: &1})
   end
 end

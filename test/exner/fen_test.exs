@@ -25,5 +25,12 @@ defmodule Exner.FENTest do
       assert Exner.Board.at(board, Position.parse("a3")).color == :white
       assert Exner.Board.at(board, Position.parse("a3")).role == :pawn
     end
+
+    test "with en passant" do
+      fen = "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1"
+
+      assert {:ok, state} = FEN.parse(fen)
+      assert state.en_passant == Position.parse("e3")
+    end
   end
 end

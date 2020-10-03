@@ -3,14 +3,12 @@ defmodule Exner.State.KnightMoves do
 
   use Exner.State.Moves
 
-  import Exner.State.Moves, only: [position_blocked?: 3]
+  import Exner.State.Moves, only: [position_blocked?: 2]
 
-  alias Exner.{Board, Move, Position}
+  alias Exner.{Move, Position}
 
-  @spec moves(Exner.Position.t(), Exner.Board.t()) :: [Move.t()]
-  def moves(position, board) do
-    knight = Board.at(board, position)
-
+  @spec moves(Exner.Position.t(), Exner.State.t()) :: [Move.t()]
+  def moves(position, state) do
     moves = [
       position |> Position.up() |> Position.up_left(),
       position |> Position.up() |> Position.up_right(),
@@ -23,7 +21,7 @@ defmodule Exner.State.KnightMoves do
     ]
 
     moves
-    |> Enum.reject(&position_blocked?(&1, board, knight.color))
+    |> Enum.reject(&position_blocked?(&1, state))
     |> Enum.map(&%Move{from: position, to: &1})
   end
 end

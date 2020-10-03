@@ -23,4 +23,42 @@ defmodule Exner.StateTest do
       assert Enum.empty?(pawn_moves)
     end
   end
+
+  describe "en passant" do
+    test "has no en passant by default" do
+      {:ok, state} = Exner.FEN.starting_board()
+
+      refute state.en_passant
+    end
+
+    test "no en passant after non-pawn move" do
+      {:ok, state} = Exner.FEN.starting_board()
+      move = %Exner.Move{from: Exner.Position.parse("a2"), to: Exner.Position.parse("a4")}
+      {:ok, state} = State.move(state, move)
+      move = %Exner.Move{from: Exner.Position.parse("a1"), to: Exner.Position.parse("a3")}
+      {:ok, state} = State.move(state, move)
+
+      refute state.en_passant
+    end
+
+    test "no en passant after regular pawn move" do
+      {:ok, state} = Exner.FEN.starting_board()
+      from = Exner.Position.parse("a2")
+      to = Exner.Position.parse("a3")
+      move = %Exner.Move{from: from, to: to}
+      {:ok, state} = State.move(state, move)
+
+      refute state.en_passant
+    end
+
+    test "can en passant after double pawn move" do
+      {:ok, state} = Exner.FEN.starting_board()
+      from = Exner.Position.parse("a2")
+      to = Exner.Position.parse("a4")
+      move = %Exner.Move{from: from, to: to}
+      {:ok, state} = State.move(state, move)
+
+      assert state.en_passant == Exner.Position.parse("a3")
+    end
+  end
 end

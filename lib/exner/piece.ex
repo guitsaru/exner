@@ -4,6 +4,7 @@ defmodule Exner.Piece do
   @type role :: :pawn | :knight | :bishop | :rook | :queen | :king
   @type t :: %__MODULE__{color: Exner.Color.t(), role: role()}
 
+  @enforce_keys [:color, :role]
   defstruct [:color, :role]
 end
 
