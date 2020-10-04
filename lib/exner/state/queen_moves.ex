@@ -8,6 +8,7 @@ defmodule Exner.State.QueenMoves do
   alias Exner.Move
   alias Exner.State.{BishopMoves, RookMoves}
 
+  @impl true
   @spec moves(Exner.Position.t(), Exner.State.t()) :: [Move.t()]
   def moves(position, state) do
     [
@@ -16,6 +17,5 @@ defmodule Exner.State.QueenMoves do
     ]
     |> Enum.flat_map(& &1)
     |> Enum.reject(&position_blocked?(&1, state))
-    |> Enum.map(&%Move{from: position, to: &1})
   end
 end

@@ -7,6 +7,7 @@ defmodule Exner.State.KingMoves do
 
   alias Exner.{Move, Position}
 
+  @impl true
   @spec moves(Exner.Position.t(), Exner.State.t()) :: [Move.t()]
   def moves(position, state) do
     positions = [
@@ -29,6 +30,21 @@ defmodule Exner.State.KingMoves do
     moves ++ Enum.reject(castle_moves, &is_nil/1)
   end
 
+  @impl true
+  @spec threatened_squares(Position.t(), Exner.State.t()) :: [Position.t()]
+  def threatened_squares(position, state) do
+    positions = [
+      Position.up(position),
+      Position.down(position),
+      Position.left(position),
+      Position.right(position)
+    ]
+
+    positions
+    |> Enum.reject(&is_nil/1)
+    |> Enum.reject(&position_blocked?(&1, state))
+  end
+
   defp castle(from, state, direction_fun) do
     moves = [
       %Move{from: from, to: direction_fun.(from)},
@@ -36,7 +52,7 @@ defmodule Exner.State.KingMoves do
     ]
 
     with {:ok, _} <- verify_open_squares(state, moves),
-         {:ok, _} <- verify_not_in_check(state),
+         {:ok, _} <- verify_not_in_check(state, from),
          {:ok, _} <- verify_no_moves_in_check(state, moves) do
       %Move{from: from, to: from |> Position.right() |> Position.right(), is_castle?: true}
     else
@@ -83,8 +99,10 @@ defmodule Exner.State.KingMoves do
     end
   end
 
-  defp verify_not_in_check(state) do
-    if Exner.State.in_check?(state) do
+  defp verify_not_in_check(state, position) do
+    threatened_squares = Exner.State.threatened_squares(state)
+
+    if Enum.find(threatened_squares, fn square -> square == position end) do
       {:error, "already in check"}
     else
       {:ok, state}
@@ -92,13 +110,12 @@ defmodule Exner.State.KingMoves do
   end
 
   defp verify_no_moves_in_check(state, moves) do
+    threatened_squares = Exner.State.threatened_squares(state)
+
     result =
       moves
       |> Enum.map(fn move ->
-        case Exner.State.move(state, move) do
-          {:ok, moved_state} -> !Exner.State.in_check?(%{moved_state | active: state.active})
-          _ -> false
-        end
+        !Enum.find(threatened_squares, fn square -> square == move.to end)
       end)
       |> Enum.all?(& &1)
 

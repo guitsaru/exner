@@ -14,6 +14,7 @@ defmodule Exner.FEN do
          {:ok, board} <- parse_board(board_fen) do
       {:ok,
        %State{
+         status: :created,
          board: board,
          active: Exner.Color.parse(active),
          en_passant: Exner.Position.parse(en_passant),

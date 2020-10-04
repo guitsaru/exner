@@ -24,6 +24,14 @@ defmodule Exner.State.PawnMovesTest do
       assert List.first(moves).to == Position.parse("a4")
     end
 
+    test "white pawn's second move blocked by other color" do
+      fen = "rn1qkbnr/ppp1pppp/3p4/8/4P3/7b/PPPP1PPP/RNBQKBNR w KQkq - 0 1"
+      {:ok, state} = Exner.FEN.parse(fen)
+      moves = PawnMoves.moves(Position.parse("h2"), state)
+
+      assert Enum.empty?(moves)
+    end
+
     test "white pawn at end of board" do
       fen = "Pnbqkbnr/pppppppp/8/8/8/8/1PPPPPPP/RNBQKBNR w KQkq - 0 1"
       {:ok, state} = Exner.FEN.parse(fen)

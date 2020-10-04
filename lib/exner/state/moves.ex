@@ -7,11 +7,23 @@ defmodule Exner.State.Moves do
   defmacro __using__(_opts) do
     quote do
       @behaviour Exner.State.Moves
+
+      @impl true
+      def threatened_squares(position, state) do
+        position
+        |> moves(state)
+        |> Enum.map(& &1.to)
+      end
+
+      defoverridable threatened_squares: 2
     end
   end
 
   @doc "Returns all possible moves for a given position"
   @callback moves(Position.t(), State.t()) :: [Move.t()]
+
+  @doc "Returns all positions threatened by the piece"
+  @callback threatened_squares(Position.t(), State.t()) :: [Position.t()]
 
   @spec position_blocked?(Position.t() | :error, State.t()) :: boolean()
   def position_blocked?(nil, _state), do: true
