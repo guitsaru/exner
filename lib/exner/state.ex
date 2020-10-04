@@ -6,6 +6,7 @@ defmodule Exner.State do
   @type moves_map :: %{optional(Position.t()) => [Move.t()]}
   @type maybe_position :: Position.t() | nil
   @type t :: %__MODULE__{
+          status: Exner.Status.t(),
           board: Board.t(),
           active: Color.t(),
           en_passant: maybe_position,
@@ -17,6 +18,7 @@ defmodule Exner.State do
 
   @enforce_keys [:board, :active]
   defstruct [
+    :status,
     :board,
     :active,
     :en_passant,
@@ -29,6 +31,7 @@ defmodule Exner.State do
   @spec new(Board.t(), Color.t()) :: t()
   def new(board, active) do
     %__MODULE__{
+      status: :created,
       board: board,
       active: active,
       white_can_castle_queenside: true,
@@ -40,11 +43,12 @@ defmodule Exner.State do
 
   @spec move(t(), Move.t()) :: {:ok, t()} | {:error, String.t()}
   def move(state, move) do
-    with {:ok, board} <- Board.move(state.board, move),
-         color <- Color.other(state.active),
-         en_passant <- en_passant(state.board, move),
-         {:ok, castle_checked_state} <- check_castle_state(state, move) do
-      {:ok, %{castle_checked_state | active: color, board: board, en_passant: en_passant}}
+    with {:ok, state} <- check_en_passant(state, move),
+         {:ok, state} <- check_castle_state(state, move),
+         {:ok, state} <- check_checkmate(state),
+         {:ok, state} <- switch_color(state),
+         {:ok, state} <- do_move(state, move) do
+      {:ok, state}
     else
       error -> error
     end
@@ -58,7 +62,7 @@ defmodule Exner.State do
     |> Enum.map(fn {position, moves} ->
       legal_moves =
         moves
-        |> Enum.map(fn move -> {move, move(state, move)} end)
+        |> Enum.map(fn move -> {move, do_move(state, move)} end)
         |> Enum.reject(fn {_, moved_state} -> in_check?(moved_state, state.active) end)
         |> Enum.map(fn {move, _} -> move end)
 
@@ -86,10 +90,28 @@ defmodule Exner.State do
     in_check?(state) && Enum.empty?(moves)
   end
 
+  defp do_move(state, move) do
+    case Board.move(state.board, move) do
+      {:ok, board} -> {:ok, %{state | board: board}}
+      error -> error
+    end
+  end
+
   defp psuedo_legal_moves(state) do
     movable_pieces =
       state.board
       |> Board.pieces()
+      |> Enum.filter(fn {_, piece} -> piece.color == state.active end)
+      |> Enum.map(fn {position, piece} -> {position, moves(state, position, piece)} end)
+
+    Enum.into(movable_pieces, %{})
+  end
+
+  defp psuedo_legal_attacks(state) do
+    movable_pieces =
+      state.board
+      |> Board.pieces()
+      |> Enum.reject(fn {_, piece} -> piece.role == :king end)
       |> Enum.filter(fn {_, piece} -> piece.color == state.active end)
       |> Enum.map(fn {position, piece} -> {position, moves(state, position, piece)} end)
 
@@ -105,8 +127,9 @@ defmodule Exner.State do
       |> Enum.find(fn {_, piece} -> piece.color == color && piece.role == :king end)
 
     %{state | active: Color.other(color)}
-    |> psuedo_legal_moves()
+    |> psuedo_legal_attacks()
     |> Enum.flat_map(fn {_, moves} -> moves end)
+    |> IO.inspect()
     |> Enum.any?(fn %_{to: pos} -> king_pos == pos end)
   end
 
@@ -200,5 +223,23 @@ defmodule Exner.State do
     }
 
     {:ok, new_state}
+  end
+
+  defp check_checkmate(state) do
+    if in_checkmate?(state) do
+      {:ok, %{state | status: :checkmate}}
+    else
+      {:ok, state}
+    end
+  end
+
+  defp switch_color(state) do
+    {:ok, %{state | active: Color.other(state.active)}}
+  end
+
+  defp check_en_passant(state, move) do
+    en_passant = en_passant(state.board, move)
+
+    {:ok, %{state | en_passant: en_passant}}
   end
 end
