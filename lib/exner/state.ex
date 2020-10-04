@@ -75,6 +75,11 @@ defmodule Exner.State do
     end
   end
 
+  @spec in_checkmate?(t()) :: boolean
+  def in_checkmate?(state) do
+    in_check?(state)
+  end
+
   defp psuedo_legal_moves(state) do
     movable_pieces =
       state.board

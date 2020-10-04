@@ -194,4 +194,26 @@ defmodule Exner.StateTest do
       refute state.black_can_castle_queenside
     end
   end
+
+  describe "in_checkmate?" do
+    test "initial board not in checkmate" do
+      {:ok, state} = Exner.FEN.starting_board()
+
+      refute State.in_checkmate?(state)
+    end
+
+    test "when in check" do
+      fen = "rnb1kbnr/pppp1ppp/8/4p3/4P1Pq/5P2/PPPP3P/RNBQKBNR w KQkq - 0 1"
+      {:ok, state} = Exner.FEN.parse(fen)
+
+      refute State.in_checkmate?(state)
+    end
+
+    test "when in checkmate" do
+      fen = "rnb1kbnr/pppp1ppp/8/4p3/6Pq/5P2/PPPPP2P/RNBQKBNR w KQkq - 0 1"
+      {:ok, state} = Exner.FEN.parse(fen)
+
+      assert State.in_checkmate?(state)
+    end
+  end
 end

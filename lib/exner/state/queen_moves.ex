@@ -16,6 +16,5 @@ defmodule Exner.State.QueenMoves do
     ]
     |> Enum.flat_map(& &1)
     |> Enum.reject(&position_blocked?(&1, state))
-    |> Enum.map(&%Move{from: position, to: &1})
   end
 end
