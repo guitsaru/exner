@@ -201,6 +201,7 @@ defmodule Exner.StateTest do
       {:ok, state} = Exner.FEN.starting_board()
 
       assert state.status == :created
+      refute state.winner
     end
 
     test "when put in checkmate" do
@@ -210,6 +211,7 @@ defmodule Exner.StateTest do
       {:ok, state} = State.move(state, move)
 
       assert state.status == :checkmate
+      assert state.winner == :white
     end
   end
 end

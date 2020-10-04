@@ -8,6 +8,7 @@ defmodule Exner.State.QueenMoves do
   alias Exner.Move
   alias Exner.State.{BishopMoves, RookMoves}
 
+  @impl true
   @spec moves(Exner.Position.t(), Exner.State.t()) :: [Move.t()]
   def moves(position, state) do
     [

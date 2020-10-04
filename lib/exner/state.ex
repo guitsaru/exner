@@ -13,9 +13,11 @@ defmodule Exner.State do
           white_can_castle_kingside: boolean,
           white_can_castle_queenside: boolean,
           black_can_castle_kingside: boolean,
-          black_can_castle_queenside: boolean
+          black_can_castle_queenside: boolean,
+          winner: Color.t() | nil
         }
 
+  @derive {Inspect, only: [:active, :status, :winner]}
   @enforce_keys [:board, :active]
   defstruct [
     :status,
@@ -25,7 +27,8 @@ defmodule Exner.State do
     :white_can_castle_kingside,
     :white_can_castle_queenside,
     :black_can_castle_kingside,
-    :black_can_castle_queenside
+    :black_can_castle_queenside,
+    :winner
   ]
 
   @spec new(Board.t(), Color.t()) :: t()
@@ -81,14 +84,23 @@ defmodule Exner.State do
 
   @spec in_checkmate?(t()) :: boolean
   def in_checkmate?(state) do
+    in_check = in_check?(state)
+
     moves =
       state
-      |> psuedo_legal_attacks()
+      |> possible_moves()
       |> Map.values()
       |> List.flatten()
-      |> IO.inspect()
 
-    in_check?(state) && Enum.empty?(moves)
+    in_check && Enum.empty?(moves)
+  end
+
+  @spec threatened_squares(t()) :: [Position.t()]
+  def threatened_squares(state) do
+    state.board
+    |> Board.pieces()
+    |> Enum.filter(fn {_, piece} -> piece.color != state.active end)
+    |> Enum.flat_map(fn {position, piece} -> threatened_squares(state, position, piece) end)
   end
 
   defp do_move(state, move) do
@@ -159,6 +171,30 @@ defmodule Exner.State do
 
   defp moves(_, _, _), do: []
 
+  defp threatened_squares(state, position, %Piece{role: :pawn}) do
+    __MODULE__.PawnMoves.threatened_squares(position, state)
+  end
+
+  defp threatened_squares(state, position, %Piece{role: :knight}) do
+    __MODULE__.KnightMoves.threatened_squares(position, state)
+  end
+
+  defp threatened_squares(state, position, %Piece{role: :bishop}) do
+    __MODULE__.BishopMoves.threatened_squares(position, state)
+  end
+
+  defp threatened_squares(state, position, %Piece{role: :rook}) do
+    __MODULE__.RookMoves.threatened_squares(position, state)
+  end
+
+  defp threatened_squares(state, position, %Piece{role: :queen}) do
+    __MODULE__.QueenMoves.threatened_squares(position, state)
+  end
+
+  defp threatened_squares(state, position, %Piece{role: :king}) do
+    __MODULE__.KingMoves.threatened_squares(position, state)
+  end
+
   defp en_passant(%Piece{role: :pawn, color: :white}, move) do
     if move.to == move.from |> Position.up() |> Position.up() do
       Position.up(move.from)
@@ -227,7 +263,7 @@ defmodule Exner.State do
 
   defp check_checkmate(state) do
     if in_checkmate?(state) do
-      {:ok, %{state | status: :checkmate}}
+      {:ok, %{state | status: :checkmate, winner: state.active}}
     else
       {:ok, state}
     end

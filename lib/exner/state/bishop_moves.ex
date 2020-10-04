@@ -7,6 +7,7 @@ defmodule Exner.State.BishopMoves do
 
   alias Exner.{Board, Move, Position}
 
+  @impl true
   @spec moves(Exner.Position.t(), Exner.State.t()) :: [Move.t()]
   def moves(position, state) do
     [
