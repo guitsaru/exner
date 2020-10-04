@@ -45,9 +45,9 @@ defmodule Exner.State do
   def move(state, move) do
     with {:ok, state} <- check_en_passant(state, move),
          {:ok, state} <- check_castle_state(state, move),
+         {:ok, state} <- do_move(state, move),
          {:ok, state} <- check_checkmate(state),
-         {:ok, state} <- switch_color(state),
-         {:ok, state} <- do_move(state, move) do
+         {:ok, state} <- switch_color(state) do
       {:ok, state}
     else
       error -> error
@@ -83,9 +83,10 @@ defmodule Exner.State do
   def in_checkmate?(state) do
     moves =
       state
-      |> possible_moves()
+      |> psuedo_legal_attacks()
       |> Map.values()
       |> List.flatten()
+      |> IO.inspect()
 
     in_check?(state) && Enum.empty?(moves)
   end
@@ -129,7 +130,6 @@ defmodule Exner.State do
     %{state | active: Color.other(color)}
     |> psuedo_legal_attacks()
     |> Enum.flat_map(fn {_, moves} -> moves end)
-    |> IO.inspect()
     |> Enum.any?(fn %_{to: pos} -> king_pos == pos end)
   end
 

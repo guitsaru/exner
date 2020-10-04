@@ -208,7 +208,6 @@ defmodule Exner.StateTest do
       fen = "rnbqkbnr/pppp1ppp/8/4p3/6P1/5P2/PPPPP2P/RNBQKBNR w KQkq - 0 1"
       {:ok, state} = Exner.FEN.parse(fen)
       {:ok, state} = State.move(state, move)
-      IO.inspect(Exner.Board.at(state.board, Exner.Position.parse("h4")))
 
       assert state.status == :checkmate
     end
