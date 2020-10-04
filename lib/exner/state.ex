@@ -77,7 +77,13 @@ defmodule Exner.State do
 
   @spec in_checkmate?(t()) :: boolean
   def in_checkmate?(state) do
-    in_check?(state)
+    moves =
+      state
+      |> possible_moves()
+      |> Map.values()
+      |> List.flatten()
+
+    in_check?(state) && Enum.empty?(moves)
   end
 
   defp psuedo_legal_moves(state) do

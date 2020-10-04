@@ -22,6 +22,7 @@ defmodule Exner.State.PawnMoves do
     |> Position.up()
     |> List.wrap()
     |> Enum.reject(&position_blocked?(&1, state))
+    |> Enum.reject(&position_blocked_by_other_color?(&1, state))
     |> Enum.map(&%Move{from: position, to: &1})
   end
 
@@ -30,16 +31,18 @@ defmodule Exner.State.PawnMoves do
     |> Position.down()
     |> List.wrap()
     |> Enum.reject(&position_blocked?(&1, state))
+    |> Enum.reject(&position_blocked_by_other_color?(&1, state))
     |> Enum.map(&%Move{from: position, to: &1})
   end
 
   defp double_moves(position, %State{active: :white} = state) do
-    if Position.file(position) == 2 do
+    if Enum.any?(default_moves(position, state)) && Position.file(position) == 2 do
       position
       |> Position.up()
       |> Position.up()
       |> List.wrap()
       |> Enum.reject(&position_blocked?(&1, state))
+      |> Enum.reject(&position_blocked_by_other_color?(&1, state))
       |> Enum.map(&%Move{from: position, to: &1})
     else
       []
@@ -47,12 +50,13 @@ defmodule Exner.State.PawnMoves do
   end
 
   defp double_moves(position, %State{active: :black} = state) do
-    if Position.file(position) == 7 do
+    if Enum.any?(default_moves(position, state)) && Position.file(position) == 7 do
       position
       |> Position.down()
       |> Position.down()
       |> List.wrap()
       |> Enum.reject(&position_blocked?(&1, state))
+      |> Enum.reject(&position_blocked_by_other_color?(&1, state))
       |> Enum.map(&%Move{from: position, to: &1})
     else
       []
@@ -79,6 +83,13 @@ defmodule Exner.State.PawnMoves do
     case Board.at(state.board, position) do
       nil -> false
       %Exner.Piece{color: other} -> state.active != other
+    end
+  end
+
+  def position_blocked_by_other_color?(position, state) do
+    case Exner.Board.at(state.board, position) do
+      nil -> false
+      _ -> true
     end
   end
 end
