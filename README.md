@@ -2,7 +2,7 @@
 
 ![CI](https://github.com/guitsaru/exner/workflows/CI/badge.svg)
 
-**TODO: Add description**
+[Exner](https://en.wikipedia.org/wiki/Gy%C5%91z%C5%91_Exner) is a work in progress chess engine written in Elixir. 
 
 ## Installation
 
